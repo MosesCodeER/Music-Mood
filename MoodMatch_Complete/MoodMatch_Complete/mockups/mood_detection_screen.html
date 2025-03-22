@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoodMatch - Mood Detection</title>
+    <style>
+        :root {
+            --primary-color: #6a5acd;
+            --secondary-color: #9370db;
+            --background-color: #f8f9fa;
+            --text-color: #333;
+            --card-bg: #fff;
+            --accent-color: #7b68ee;
+            --calm-color: #4682b4;
+            --happy-color: #ffa500;
+            --energetic-color: #ff4500;
+            --relaxed-color: #20b2aa;
+            --sad-color: #4169e1;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+
+        .container {
+            max-width: 414px;
+            margin: 0 auto;
+            background-color: var(--card-bg);
+            min-height: 100vh;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        header {
+            padding: 20px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .header-action {
+            width: 24px;
+        }
+
+        .detection-methods {
+            padding: 20px;
+        }
+
+        .method-tabs {
+            display: flex;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 20px;
+        }
+
+        .method-tab {
+            padding: 10px 15px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #888;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .method-tab.active {
+            color: var(--primary-color);
+        }
+
+        .method-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: var(--primary-color);
+        }
+
+        .detection-content {
+            padding: 10px 0;
+        }
+
+        .detection-card {
+            background-color: var(--card-bg);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .detection-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .detection-icon {
+            font-size: 24px;
+            margin-right: 10px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+
+        .status-active {
+            background-color: #4CAF50;
+        }
+
+        .status-inactive {
+            background-color: #ccc;
+        }
+
+        .status-text {
+            font-size: 12px;
+            color: #888;
+            font-weight: normal;
+        }
+
+        .detection-description {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .permission-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-top: 1px solid #eee;
+        }
+
+        .toggle-label {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: var(--primary-color);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+
+        .manual-detection {
+            padding: 20px;
+        }
+
+        .mood-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .mood-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px 10px;
+            border-radius: 12px;
+            background-color: #f8f8f8;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .mood-option:hover, .mood-option.selected {
+            background-color: rgba(106, 90, 205, 0.1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .mood-option.selected {
+            border: 2px solid var(--primary-color);
+        }
+
+        .mood-emoji {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .mood-label {
+            font-size: 12px;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .intensity-slider {
+            margin: 30px 0;
+        }
+
+        .intensity-label {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .intensity-value {
+            color: var(--primary-color);
+        }
+
+        .slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #eee;
+            outline: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            cursor: pointer;
+        }
+
+        .detection-actions {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .action-btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(106, 90, 205, 0.3);
+        }
+
+        .action-btn.secondary {
+            background-color: transparent;
+            color: var(--primary-color);
+            box-shadow: none;
+            margin-right: 15px;
+        }
+
+        .detection-result {
+            text-align: center;
+            padding: 30px 20px;
+        }
+
+        .result-emoji {
+            font-size: 72px;
+            margin-bottom: 20px;
+        }
+
+        .result-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: var(--happy-color);
+        }
+
+        .result-description {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .result-actions {
+            display: flex;
+            justify-content: center;
+        }
+
+        .navbar {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            max-width: 414px;
+            background-color: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #888;
+            text-decoration: none;
+            font-size: 10px;
+        }
+
+        .nav-icon {
+            font-size: 20px;
+            margin-bottom: 3px;
+        }
+
+        .nav-item.active {
+            color: var(--primary-color);
+        }
+
+        .sensor-animation {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            margin: 20px 0;
+        }
+
+        .pulse {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background-color: rgba(106, 90, 205, 0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            animation: pulse 2s infinite;
+        }
+
+        .pulse::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background-color: rgba(106, 90, 205, 0.2);
+            z-index: -1;
+            animation: pulse-outer 2s infinite;
+        }
+
+        .sensor-icon {
+            font-size: 48px;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(0.95);
+            }
+            70% {
+                transform: scale(1);
+            }
+            100% {
+                transform: scale(0.95);
+            }
+        }
+
+        @keyframes pulse-outer {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(1.5);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <button class="back-btn">←</button>
+            <div class="header-title">Detect Your Mood</div>
+            <div class="header-action"></div>
+        </header>
+
+        <div class="detection-methods">
+            <div class="method-tabs">
+                <div class="method-tab active">Auto Detect</div>
+                <div class="method-tab">Manual Select</div>
+                <div class="method-tab">History</div>
+            </div>
+
+            <div class="detection-content">
+                <div class="detection-card">
+                    <div class="detection-title">
+                        <span><span class="detection-icon">🎤</span> Voice Analysis</span>
+                        <span><span class="status-indicator status-active"></span> <span class="status-text">Active</span></span>
+                    </div>
+                    <div class="detection-description">
+                        Analyzes your voice tone and speech patterns to detect emotional cues. Requires microphone access.
+                    </div>
+                    <div class="permission-toggle">
+                        <div class="toggle-label">Allow microphone access</div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="detection-card">
+                    <div class="detection-title">
+                        <span><span class="detection-icon">⌨️</span> Typing Patterns</span>
+                        <span><span class="status-indicator status-active"></span> <span class="status-text">Active</span></span>
+                    </div>
+                    <div class="detection-description">
+                        Monitors typing speed, pressure, and patterns to infer emotional state. No personal data is recorded.
+                    </div>
+                    <div class="permission-toggle">
+                        <div class="toggle-label">Allow keyboard monitoring</div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="detection-card">
+                    <div class="detection-title">
+                        <span><span class="detection-icon">📷</span> Facial Expression</span>
+                        <span><span class="status-indicator status-inactive"></span> <span class="status-text">Inactive</span></span>
+                    </div>
+                    <div class="detection-description">
+                        Uses camera to analyze facial expressions for emotion detection. All processing happens on-device.
+                    </div>
+                    <div class="permission-toggle">
+                        <div class="toggle-label">Allow camera access</div>
+                        <label class="toggle-switch">
+                            <input type="checkbox">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="detection-card">
+                    <div class="detection-title">
+                        <span><span class="detection-icon">📱</span> Motion Sensors</span>
+                        <span><span class="status-indicator status-active"></span> <span class="status-text">Active</span></span>
+                    </div>
+                    <div class="detection-description">
+                        Uses accelerometer and gyroscope to detect movement patterns that correlate with emotional states.
+                    </div>
+                    <div class="permission-toggle">
+                        <div class="toggle-label">Allow motion sensing</div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="detection-card">
+                    <div class="detection-title">
+                        <span><span class="detection-icon">❤️</span> Health Data</span>
+                        <span><span class="status-indicator status-active"></span> <span class="status-text">Active</span></span>
+                    </div>
+                    <div class="detection-description">
+                        Integrates with health apps to use relevant data like sleep quality and heart rate for mood context.
+                    </div>
+                    <div class="permission-toggle">
+                        <div class="toggle-label">Allow health data access</div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="detection-actions">
+                <button class="action-btn">Detect Now</button>
+            </div>
+        </div>
+
+        <!-- Manual Mood Selection (hidden by default) -->
+        <div class="manual-detection" style="display: none;">
+            <div class="mood-grid">
+                <div class="mood-option">
+                    <div class="mood-emoji">😊</div>
+                    <div class="mood-label">Happy</div>
+                </div>
+                <div class="mood-option selected">
+                    <div class="mood-emoji">😃</div>
+                    <div class="mood-label">Excited</div>
+                </div>
+                <div class="mood-option">
+                    <div class="mood-emoji">😌</div>
+                    <div class="mood-label">Relaxed</div>
+                </div>
+                <div class="mood-option">
+                    <div class="mood-emoji">😔</div>
+                    <div class="mood-label">Sad</div>
+                </div>
+                <div class="mood-option">
+                    <div class="mood-emoji">😠</div>
+                    <div class="mood-label">Angry</div>
+                </div>
+                <div class="mood-option">
+                    <div class="mood-emoji">😴</div>
+                    <div class="mood-label">Tired</div>
+                </div>
+                <div class="mood-option">
+                    <div class="mood-emoji">😰</div>
+                    <div class="mood-label">Anxious</div>
+                </div>
+                <div class="mood-option">
+                    <div class="mood-emoji">🤔</div>
+                    <div class="mood-label">Thoughtful</div>
+                </div>
+                <div class="mood-option">
+                    <div class="mood-emoji">😐</div>
+                    <div class="mood-label">Neutral</div>
+                </div>
+            </div>
+
+            <div class="intensity-slider">
+                <div class="intensity-label">
+                    <span>Intensity</span>
+                    <span class="intensity-value">7/10</span>
+                </div>
+                <input type="range" min="1" max="10" value="7" class="slider" id="intensityRange">
+            </div>
+
+            <div class="detection-actions">
+                <button class="action-btn secondary">Cancel</button>
+                <button class="action-btn">Confirm</button>
+            </div>
+        </div>
+
+        <!-- Detection in Progress (hidden by default) -->
+        <div class="detection-progress" style="display: none;">
+            <div class="sensor-animation">
+                <div class="pulse">
+                    <div class="sensor-icon">🎤</div>
+                </div>
+            </div>
+            <div style="text-align: center; padding: 0 20px;">
+                <h2>Detecting Your Mood</h2>
+                <p>Please speak naturally for a few seconds...</p>
+                <div style="margin-top: 30px;">
+                    <button class="action-btn secondary">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detection Result (hidden by default) -->
+        <div class="detection-result" style="display: none;">
+            <div class="result-emoji">😃</div>
+            <div class="result-title">You're Happy!</div>
+            <div class="result-description">
+                Based on your voice tone, typing patterns, and recent activity, you seem to be in a positive, upbeat mood.
+            </div>
+            <div class="result-actions">
+                <button class="action-btn secondary">Adjust</button>
+                <button class="action-btn">Play Music</button>
+            </div>
+        </div>
+
+        <div style="height: 80px;"></div> <!-- Spacer for navbar -->
+
+        <div class="navbar">
+            <a href="#" class="nav-item">
+                <div class="nav-icon">🏠</div>
+                Home
+            </a>
+            <a href="#" class="nav-item">
+                <div class="nav-icon">🎵</div>
+                Music
+            </a>
+            <a href="#" class="nav-item active">
+                <div class="nav-icon">🔍</div>
+                Detect
+            </a>
+            <a href="#" class="nav-item">
+                <div class="nav-icon">📊</div>
+                Insights
+            </a>
+            <a href="#" class="nav-item">
+                <div class="nav-icon">⚙️</div>
+                Settings
+            </a>
+        </div>
+    </div>
+</body>
+</html>

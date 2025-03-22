@@ -1,0 +1,83 @@
+graph TD
+    subgraph "User Interaction Layer"
+        A[User Interface] --> B[Mood Input Methods]
+        A --> C[Music Player]
+        A --> D[Insights Dashboard]
+        A --> E[Settings & Preferences]
+    end
+    
+    subgraph "Mood Detection System"
+        B --> F[Voice Analysis]
+        B --> G[Typing Pattern Analysis]
+        B --> H[Facial Expression Analysis]
+        B --> I[Motion Sensor Analysis]
+        B --> J[Manual Mood Input]
+        
+        F --> K[Multi-modal Fusion]
+        G --> K
+        H --> K
+        I --> K
+        J --> K
+        
+        K --> L[Mood Classification]
+        L --> M[Mood Profile]
+    end
+    
+    subgraph "Health Integration"
+        N[Health Platforms] --> O[Apple HealthKit]
+        N --> P[Samsung Health]
+        N --> Q[Health Connect]
+        
+        O --> R[Health Data Normalization]
+        P --> R
+        Q --> R
+        
+        R --> S[Health-Mood Correlation]
+        S --> M
+        M --> S
+    end
+    
+    subgraph "Music Recommendation Engine"
+        M --> T[Music Feature Matching]
+        U[User Preferences] --> T
+        V[Listening History] --> T
+        
+        T --> W[Playlist Generation]
+        W --> X[Mood Transition Options]
+        W --> Y[Song Recommendations]
+        
+        X --> C
+        Y --> C
+    end
+    
+    subgraph "External Services"
+        Z[Music Streaming APIs] --> AA[Spotify API]
+        Z --> AB[Apple Music API]
+        Z --> AC[Other Music Services]
+        
+        AA --> W
+        AB --> W
+        AC --> W
+    end
+    
+    subgraph "Data Storage"
+        AD[Local Storage] --> AE[User Preferences]
+        AD --> AF[Cached Music Data]
+        AD --> AG[Mood History]
+        
+        AE --> U
+        AG --> V
+    end
+    
+    subgraph "Feedback System"
+        C --> AH[User Feedback]
+        AH --> AI[Recommendation Refinement]
+        AI --> T
+    end
+    
+    subgraph "Analytics & Insights"
+        AG --> AJ[Pattern Recognition]
+        S --> AJ
+        AJ --> AK[Personalized Insights]
+        AK --> D
+    end
