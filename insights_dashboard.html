@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoodMatch - Insights Dashboard</title>
+    <style>
+        :root {
+            --primary-color: #6a5acd;
+            --secondary-color: #9370db;
+            --background-color: #f8f9fa;
+            --text-color: #333;
+            --card-bg: #fff;
+            --accent-color: #7b68ee;
+            --calm-color: #4682b4;
+            --happy-color: #ffa500;
+            --energetic-color: #ff4500;
+            --relaxed-color: #20b2aa;
+            --sad-color: #4169e1;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+
+        .container {
+            max-width: 414px;
+            margin: 0 auto;
+            background-color: var(--card-bg);
+            min-height: 100vh;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        header {
+            padding: 20px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border-radius: 0 0 20px 20px;
+        }
+
+        .header-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .header-subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .time-filter {
+            display: flex;
+            padding: 15px 20px;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .time-option {
+            padding: 8px 16px;
+            margin-right: 10px;
+            background-color: #f0f0f0;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .time-option.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .insights-content {
+            padding: 0 20px 20px;
+        }
+
+        .insight-card {
+            background-color: var(--card-bg);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .card-action {
+            font-size: 14px;
+            color: var(--primary-color);
+            cursor: pointer;
+        }
+
+        .mood-chart {
+            height: 200px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .chart-bars {
+            display: flex;
+            height: 150px;
+            align-items: flex-end;
+            justify-content: space-between;
+            padding-bottom: 20px;
+        }
+
+        .chart-bar {
+            width: 12%;
+            border-radius: 4px 4px 0 0;
+            position: relative;
+        }
+
+        .chart-bar::after {
+            content: attr(data-label);
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            color: #888;
+        }
+
+        .chart-legend {
+            display: flex;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-right: 15px;
+            margin-bottom: 5px;
+            font-size: 12px;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+            margin-right: 5px;
+        }
+
+        .mood-summary {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+
+        .summary-item {
+            width: 48%;
+            background-color: #f8f8f8;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .summary-icon {
+            font-size: 24px;
+            margin-right: 10px;
+        }
+
+        .summary-info {
+            flex: 1;
+        }
+
+        .summary-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 3px;
+        }
+
+        .summary-value {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .correlation-card {
+            padding: 15px;
+        }
+
+        .correlation-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .correlation-icon {
+            font-size: 20px;
+            margin-right: 15px;
+            width: 30px;
+            text-align: center;
+        }
+
+        .correlation-info {
+            flex: 1;
+        }
+
+        .correlation-title {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 3px;
+        }
+
+        .correlation-description {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .correlation-strength {
+            width: 60px;
+            height: 6px;
+            background-color: #eee;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-left: 10px;
+        }
+
+        .strength-bar {
+            height: 100%;
+            background-color: var(--primary-color);
+        }
+
+        .music-impact {
+            padding: 15px;
+        }
+
+        .impact-item {
+            display: flex;
+            margin-bottom: 15px;
+        }
+
+        .impact-mood {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-right: 15px;
+        }
+
+        .impact-info {
+            flex: 1;
+        }
+
+        .impact-title {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+
+        .impact-description {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .impact-genres {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .genre-tag {
+            font-size: 10px;
+            background-color: #f0f0f0;
+            padding: 4px 8px;
+            border-radius: 10px;
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+
+        .recommendations {
+            padding: 15px;
+        }
+
+        .recommendation-item {
+            background-color: #f8f8f8;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+
+        .recommendation-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+        }
+
+        .recommendation-icon {
+            margin-right: 8px;
+        }
+
+        .recommendation-description {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .action-button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            font-size: 12px;
+            margin-top: 8px;
+            cursor: pointer;
+        }
+
+        .navbar {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            max-width: 414px;
+            background-color: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #888;
+            text-decoration: none;
+            font-size: 10px;
+        }
+
+        .nav-icon {
+            font-size: 20px;
+            margin-bottom: 3px;
+        }
+
+        .nav-item.active {
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-title">Insights</div>
+            <div class="header-subtitle">Discover patterns in your mood and music</div>
+        </header>
+
+        <div class="time-filter">
+            <div class="time-option">Day</div>
+            <div class="time-option active">Week</div>
+            <div class="time-option">Month</div>
+            <div class="time-option">3 Months</div>
+            <div class="time-option">Year</div>
+        </div>
+
+        <div class="insights-content">
+            <div class="insight-card">
+                <div class="card-header">
+                    <div class="card-title">Mood Patterns</div>
+                    <div class="card-action">Details</div>
+                </div>
+                <div class="mood-chart">
+                    <div class="chart-bars">
+                        <div class="chart-bar" style="height: 40%; background-color: var(--sad-color);" data-label="Mon"></div>
+                        <div class="chart-bar" style="height: 65%; background-color: var(--calm-color);" data-label="Tue"></div>
+                        <div class="chart-bar" style="height: 45%; background-color: var(--sad-color);" data-label="Wed"></div>
+                        <div class="chart-bar" style="height: 60%; background-color: var(--calm-color);" data-label="Thu"></div>
+                        <div class="chart-bar" style="height: 85%; background-color: var(--happy-color);" data-label="Fri"></div>
+                        <div class="chart-bar" style="height: 75%; background-color: var(--energetic-color);" data-label="Sat"></div>
+                        <div class="chart-bar" style="height: 70%; background-color: var(--relaxed-color);" data-label="Sun"></div>
+                    </div>
+                    <div class="chart-legend">
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: var(--happy-color);"></div>
+                            Happy
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: var(--energetic-color);"></div>
+                            Energetic
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: var(--relaxed-color);"></div>
+                            Relaxed
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: var(--calm-color);"></div>
+                            Calm
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: var(--sad-color);"></div>
+                            Low
+                        </div>
+                    </div>
+                </div>
+                <div class="mood-summary">
+                    <div class="summary-item">
+                        <div class="summary-icon">😃</div>
+                        <div class="summary-info">
+                            <div class="summary-label">Most Common</div>
+                            <div class="summary-value">Happy</div>
+                        </div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-icon">📈</div>
+                        <div class="summary-info">
+                            <div class="summary-label">Trend</div>
+                            <div class="summary-value">Improving</div>
+                        </div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-icon">📅</div>
+                        <div class="summary-info">
+                            <div class="summary-label">Best Day</div>
+                            <div class="summary-value">Friday</div>
+                        </div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-icon">⏱️</div>
+                        <div class="summary-info">
+                            <div class="summary-label">Best Time</div>
+                            <div class="summary-value">Afternoon</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="insight-card">
+                <div class="card-header">
+                    <div class="card-title">Health Correlations</div>
+                    <div class="card-action">Details</div>
+                </div>
+                <div class="correlation-card">
+                    <div class="correlation-item">
+                        <div class="correlation-icon">😴</div>
+                        <div class="correlation-info">
+                            <div class="correlation-title">Sleep Quality</div>
+                            <div class="correlation-description">Better sleep correlates with improved mood the next day</div>
+                        </div>
+                        <div class="correlation-strength">
+                            <div class="strength-bar" style="width: 85%;"></div>
+                        </div>
+                    </div>
+                    <div class="correlation-item">
+                        <div class="correlation-icon">🏃</div>
+                        <div class="correlation-info">
+                            <div class="correlation-title">Physical Activity</div>
+                            <div class="correlation-description">Days with more steps show higher energy levels</div>
+                        </div>
+                        <div class="correlation-strength">
+                            <div class="strength-bar" style="width: 75%;"></div>
+                        </div>
+                    </div>
+                    <div class="correlation-item">
+                        <div class="correlation-icon">❤️</div>
+                        <div class="correlation-info">
+                            <div class="correlation-title">Heart Rate Variability</div>
+                            <div class="correlation-description">Higher HRV correlates with calmer moods</div>
+                        </div>
+                        <div class="correlation-strength">
+                            <div class="strength-bar" style="width: 65%;"></div>
+                        </div>
+                    </div>
+                    <div class="correlation-item">
+                        <div class="correlation-icon">🌤️</div>
+                        <div class="correlation-info">
+                            <div class="correlation-title">Weather</div>
+                            <div class="correlation-description">Sunny days tend to improve your mood</div>
+                        </div>
+                        <div class="correlation-strength">
+                            <div class="strength-bar" style="width: 50%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="insight-card">
+                <div class="card-header">
+                    <div class="card-title">Music Impact</div>
+                    <div class="card-action">Details</div>
+                </div>
+                <div class="music-impact">
+                    <div class="impact-item">
+                        <div class="impact-mood" style="background-color: rgba(255, 165, 0, 0.2);">😃</div>
+                        <div class="impact-info">
+                            <div class="impact-title">When Happy</div>
+                            <div class="impact-description">Music with high energy and positivity extends your happy mood by an average of 45 minutes</div>
+                            <div class="impact-genres">
+                                <div class="genre-tag">Pop</div>
+                                <div class="genre-tag">Dance</div>
+                                <div class="genre-tag">Upbeat Rock</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="impact-item">
+                        <div class="impact-mood" style="background-color: rgba(65, 105, 225, 0.2);">😔</div>
+                        <div class="impact-info">
+                            <div class="impact-title">When Low</div>
+                            <div class="impact-description">Gradually increasing tempo helps shift your mood positively within 20 minutes</div>
+                            <div class="impact-genres">
+                                <div class="genre-tag">Indie Folk</div>
+                                <div class="genre-tag">Acoustic</div>
+                                <div class="genre-tag">Uplifting</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="impact-item">
+                        <div class="impact-mood" style="background-color: rgba(32, 178, 170, 0.2);">😌</div>
+                        <div class="impact-info">
+                            <div class="impact-title">When Relaxed</div>
+                            <div class="impact-description">Instrumental music helps maintain your calm state for longer periods</div>
+                            <div class="impact-genres">
+                                <div class="genre-tag">Ambient</div>
+                                <div class="genre-tag">Classical</div>
+                                <div class="genre-tag">Lo-fi</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="insight-card">
+                <div class="card-header">
+                    <div class="card-title">Personalized Recommendations</div>
+                </div>
+                <div class="recommendations">
+                    <div class="recommendation-item">
+                        <div class="recommendation-title">
+                            <span class="recommendation-icon">🎵</span>
+                            Morning Mood Boost
+                        </div>
+                        <div class="recommendation-description">
+                            Start your day with upbeat music between 7-8 AM to improve your mood throughout the morning.
+                        </div>
+                        <button class="action-button">Create Routine</button>
+                    </div>
+                    <div class="recommendation-item">
+                        <div class="recommendation-title">
+                            <span class="recommendation-icon">🏃</span>
+                            Activity + Music
+                        </div>
+                        <div class="recommendation-description">
+                            Combining 20 minutes of physical activity with energetic music shows the strongest mood improvement.
+                        </div>
+                        <button class="action-button">Try Combo</button>
+                    </div>
+                    <div class="recommendation-item">
+                        <div class="recommendation-title">
+                            <span class="recommendation-icon">😴</span>
+                            Sleep Preparation
+                        </div>
+                        <div class="recommendation-description">
+                            Listening to calm music 30 minutes before bed correlates with better sleep and mood the next day.
+                        </div>
+                        <button class="action-button">Set Reminder</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="height: 80px;"></div> <!-- Spacer for navbar -->
+
+        <div class="navbar">
+            <a href="#" class="nav-item">
+                <div class="nav-icon">🏠</div>
+                Home
+            </a>
+            <a href="#" class="nav-item">
+                <div class="nav-icon">🎵</div>
+                Music
+            </a>
+            <a href="#" class="nav-item">
+                <div class="nav-icon">🔍</div>
+                Detect
+            </a>
+            <a href="#" class="nav-item active">
+                <div class="nav-icon">📊</div>
+                Insights
+            </a>
+            <a href="#" class="nav-item">
+                <div class="nav-icon">⚙️</div>
+                Settings
+            </a>
+        </div>
+    </div>
+</body>
+</html>
